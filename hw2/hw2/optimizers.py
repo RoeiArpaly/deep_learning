@@ -72,7 +72,8 @@ class VanillaSGD(Optimizer):
             #  Update the gradient according to regularization and then
             #  update the parameters tensor.
             # ====== YOUR CODE: ======
-
+            dp += self.reg * p
+            p -= self.learn_rate * dp
             # ========================
 
 
@@ -91,7 +92,7 @@ class MomentumSGD(Optimizer):
 
         # TODO: Add your own initializations as needed.
         # ====== YOUR CODE: ======
-
+        self.momentum_dict = {p: torch.zeros_like(p) for p, dp in self.params}
         # ========================
 
     def step(self):
@@ -103,7 +104,9 @@ class MomentumSGD(Optimizer):
             # update the parameters tensor based on the velocity. Don't forget
             # to include the regularization term.
             # ====== YOUR CODE: ======
-
+            self.momentum_dict[p] = self.momentum_dict[p] * self.momentum + self.learn_rate * dp
+            dp += self.reg * p
+            p -= self.momentum_dict[p]
             # ========================
 
 
@@ -124,7 +127,7 @@ class RMSProp(Optimizer):
 
         # TODO: Add your own initializations as needed.
         # ====== YOUR CODE: ======
-
+        self.rms_dict = {p: torch.zeros_like(p) for p, dp in self.params}
         # ========================
 
     def step(self):
@@ -137,5 +140,7 @@ class RMSProp(Optimizer):
             # average of it's previous gradients. Use it to update the
             # parameters tensor.
             # ====== YOUR CODE: ======
-
+            dp += self.reg * p
+            self.rms_dict[p] = self.decay * self.rms_dict[p] + (1 - self.decay) * dp ** 2
+            p -= self.learn_rate * dp / (self.rms_dict[p] + self.eps) ** 0.5
             # ========================

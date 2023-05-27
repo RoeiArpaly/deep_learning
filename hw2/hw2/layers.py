@@ -82,7 +82,7 @@ class LeakyReLU(Layer):
 
         # TODO: Implement the LeakyReLU operation.
         # ====== YOUR CODE: ======
-
+        out = torch.max(self.alpha * x, x)
         # ========================
 
         self.grad_cache["x"] = x
@@ -97,7 +97,9 @@ class LeakyReLU(Layer):
 
         # TODO: Implement gradient w.r.t. the input x
         # ====== YOUR CODE: ======
-
+        ones = torch.ones_like(x)
+        dx = torch.where(x > 0, ones, self.alpha * ones)
+        dx = dx * dout
         # ========================
 
         return dx
@@ -116,7 +118,7 @@ class ReLU(LeakyReLU):
 
     def __init__(self):
         # ====== YOUR CODE: ======
-
+        super().__init__(alpha=0)
         # ========================
 
     def __repr__(self):
@@ -143,7 +145,8 @@ class Sigmoid(Layer):
         #  Save whatever you need into grad_cache.
         #tip: store the output in self.grad_cache["sigmoid"] 
         # ====== YOUR CODE: ======
-
+        out = 1 / (1 + torch.exp(-x))
+        self.grad_cache["sigmoid"] = out
         # ========================
 
         return out
@@ -156,7 +159,7 @@ class Sigmoid(Layer):
 
         # TODO: Implement gradient w.r.t. the input x
         # ====== YOUR CODE: ======
-
+        dx = self.grad_cache["sigmoid"] * (1 - self.grad_cache["sigmoid"]) * dout
         # ========================
 
         return dx
@@ -184,7 +187,8 @@ class TanH(Layer):
         # TODO: Implement the tanh function.
         #  Save whatever you need into grad_cache.
         # ====== YOUR CODE: ======
-
+        out = (torch.exp(x) - torch.exp(-x)) / (torch.exp(x) + torch.exp(-x))
+        self.grad_cache["tanh"] = out
         # ========================
 
         return out
@@ -197,7 +201,7 @@ class TanH(Layer):
 
         # TODO: Implement gradient w.r.t. the input x
         # ====== YOUR CODE: ======
-
+        dx = (1 - self.grad_cache["tanh"] ** 2) * dout
         # ========================
 
         return dx
@@ -226,7 +230,8 @@ class Linear(Layer):
         # deviation of `wstd`. Init bias to zero.
         #tip: use torch.randn
         # ====== YOUR CODE: ======
-
+        self.w = torch.normal(mean=0, std=wstd, size=(out_features, in_features))
+        self.b = torch.zeros(size=(out_features, ))
         # ========================
 
         # These will store the gradients
@@ -246,7 +251,8 @@ class Linear(Layer):
 
         # TODO: Compute the affine transform
         # ====== YOUR CODE: ======
-
+        x = x.view(x.shape[0], -1)
+        out = torch.matmul(x, self.w.T) + self.b
         # ========================
 
         self.grad_cache["x"] = x
@@ -265,7 +271,9 @@ class Linear(Layer):
         #   - db, the gradient of the loss with respect to b
         #  Note: You should ACCUMULATE gradients in dw and db.
         # ====== YOUR CODE: ======
-
+        self.dw += dout.T @ x
+        self.db += dout.sum(axis=0)
+        dx = dout @ self.w
         # ========================
 
         return dx
@@ -306,7 +314,9 @@ class CrossEntropyLoss(Layer):
         # TODO: Compute the cross entropy loss using the last formula from the
         #  notebook (i.e. directly using the class scores).
         # ====== YOUR CODE: ======
-
+        e = torch.sum(torch.exp(x), dim=1)#.view(-1, 1)
+        loss = -x[torch.arange(N), y] + torch.log(e)
+        loss = loss.mean()
         # ========================
 
         self.grad_cache["x"] = x
@@ -325,7 +335,10 @@ class CrossEntropyLoss(Layer):
 
         # TODO: Calculate the gradient w.r.t. the input x.
         # ====== YOUR CODE: ======
-
+        dx = torch.exp(x) / torch.sum(torch.exp(x), dim=1).view(-1, 1)
+        dx[torch.arange(N), y] -= 1
+        dx *= dout
+        dx /= N
         # ========================
 
         return dx
@@ -349,7 +362,11 @@ class Dropout(Layer):
         #  Notice that contrary to previous layers, this layer behaves
         #  differently a according to the current training_mode (train/test).
         # ====== YOUR CODE: ======
-
+        out = x
+        if self.training_mode:
+            mask = torch.bernoulli(torch.ones_like(x) * (1 - self.p)) / (1 - self.p)
+            self.grad_cache["mask"] = mask
+            out = torch.mul(x, mask)
         # ========================
 
         return out
@@ -357,7 +374,9 @@ class Dropout(Layer):
     def backward(self, dout):
         # TODO: Implement the dropout backward pass.
         # ====== YOUR CODE: ======
-
+        dx = dout
+        if self.training_mode:
+            dx = torch.mul(dout, self.grad_cache["mask"])
         # ========================
 
         return dx
@@ -384,7 +403,9 @@ class Sequential(Layer):
         # TODO: Implement the forward pass by passing each layer's output
         #  as the input of the next.
         # ====== YOUR CODE: ======
-
+        out = x
+        for layer in self.layers:
+            out = layer.forward(out, **kw)
         # ========================
 
         return out
@@ -396,7 +417,9 @@ class Sequential(Layer):
         #  Each layer's input gradient should be the previous layer's output
         #  gradient. Behold the backpropagation algorithm in action!
         # ====== YOUR CODE: ======
-
+        din = dout
+        for layer in reversed(self.layers):
+            din = layer.backward(din)
         # ========================
 
         return din
@@ -406,7 +429,8 @@ class Sequential(Layer):
 
         # TODO: Return the parameter tuples from all layers.
         # ====== YOUR CODE: ======
-
+        for layer in self.layers:
+            params.extend(layer.params())
         # ========================
 
         return params
@@ -470,7 +494,16 @@ class MLP(Layer):
             
         # TODO: Build the MLP architecture as described.
         # ====== YOUR CODE: ======
-        
+        layers.append(Linear(in_features, hidden_features[0]))
+        for in_features, out_features in zip(hidden_features[:-1], hidden_features[1:]):
+            layers.append(activation_cls())
+            if dropout > 0:
+                layers.append(Dropout(dropout))
+            layers.append(Linear(in_features, out_features))
+        layers.append(activation_cls())
+        if dropout > 0:
+            layers.append(Dropout(dropout))
+        layers.append(Linear(hidden_features[-1], num_classes))
         # ========================
 
         self.sequence = Sequential(*layers)

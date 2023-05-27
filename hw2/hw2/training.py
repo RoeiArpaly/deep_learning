@@ -80,7 +80,12 @@ class Trainer(abc.ABC):
             #    save the model to the file specified by the checkpoints
             #    argument.
             # ====== YOUR CODE: ======
-
+            epoch_train_loss, epoch_train_acc = self.train_epoch(dl_train, verbose=verbose, **kw)
+            epoch_test_loss, epoch_test_acc = self.test_epoch(dl_test, verbose=verbose, **kw)
+            train_loss.append((sum(epoch_train_loss) / len(epoch_train_loss)).item())
+            train_acc.append(epoch_train_acc)
+            test_loss.append((sum(epoch_test_loss) / len(epoch_test_loss)).item())
+            test_acc.append(epoch_test_acc)
             # ========================
 
         return FitResult(actual_num_epochs, train_loss, train_acc, test_loss, test_acc)
@@ -201,13 +206,16 @@ class LayerTrainer(Trainer):
         #    not a tensor) as num_correct.
         # ====== YOUR CODE: ======
         # Forward pass
-
+        X_scores = self.model(X)
+        self.optimizer.zero_grad()
+        loss = self.loss_fn(X_scores, y)
         # Backward pass
-
+        loss_back = self.loss_fn.backward()
+        self.model.backward(loss_back)
         # Optimizer step
-
+        self.optimizer.step()
         # Calculate accuracy
-        
+        num_correct = torch.sum(torch.argmax(X_scores, dim=1) == y).item()
         # ========================
 
         return BatchResult(loss, num_correct)
@@ -218,9 +226,10 @@ class LayerTrainer(Trainer):
         # TODO: Evaluate the Layer model on one batch of data.
         # ====== YOUR CODE: ======
         # Forward pass
-
+        X_scores = self.model(X)
+        loss = self.loss_fn(X_scores, y)
         # Calculate accuracy
-        
+        num_correct = torch.sum(torch.argmax(X_scores, dim=1) == y).item()
         # ========================
 
         return BatchResult(loss, num_correct)
@@ -244,13 +253,16 @@ class TorchTrainer(Trainer):
         #tip: use loss = loss.item() in the end
         # ====== YOUR CODE: ======
         # Forward pass
-
+        X_scores = self.model(X)
+        loss = self.loss_fn(X_scores, y)
         # Backward pass
-
+        self.optimizer.zero_grad()
+        loss.backward()
         # Optimizer step
-
+        self.optimizer.step()
         # Calculate accuracy
-        
+        num_correct = torch.sum(torch.argmax(X_scores, dim=1) == y).item()
+        loss = loss.item()
         # ========================
 
         return BatchResult(loss, num_correct)
@@ -267,9 +279,11 @@ class TorchTrainer(Trainer):
             #  - Calculate number of correct predictions
             # ====== YOUR CODE: ======
             # Forward pass
-
+            X_scores = self.model(X)
+            loss = self.loss_fn(X_scores, y)
             # Calculate accuracy
-
+            num_correct = torch.sum(torch.argmax(X_scores, dim=1) == y).item()
+            loss = loss.item()
             # ========================
 
         return BatchResult(loss, num_correct)
