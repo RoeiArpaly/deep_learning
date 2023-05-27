@@ -91,7 +91,7 @@ class ConvClassifier(nn.Module):
         rng_state = torch.get_rng_state()
         try:
             # ====== YOUR CODE: ======
-
+            pass
             # ========================
         finally:
             torch.set_rng_state(rng_state)
@@ -117,7 +117,7 @@ class ConvClassifier(nn.Module):
         #  Extract features from the input, run the classifier on them and
         #  return class scores.
         # ====== YOUR CODE: ======
-
+        out = None
         # ========================
         return out
 
