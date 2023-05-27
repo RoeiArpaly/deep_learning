@@ -77,7 +77,12 @@ class ConvClassifier(nn.Module):
         #  Note: If N is not divisible by P, then N mod P additional
         #  CONV->ACTs should exist at the end, without a POOL after them.
         # ====== YOUR CODE: ======
-
+        for i in range(len(self.channels)):
+            layers.append(nn.Conv2d(in_channels, self.channels[i], **self.conv_params))
+            layers.append(ACTIVATIONS[self.activation_type](**self.activation_params))
+            in_channels = self.channels[i]
+            if (i + 1) % self.pool_every == 0:
+                layers.append(POOLINGS[self.pooling_type](**self.pooling_params))
         # ========================
         seq = nn.Sequential(*layers)
         return seq
@@ -91,7 +96,8 @@ class ConvClassifier(nn.Module):
         rng_state = torch.get_rng_state()
         try:
             # ====== YOUR CODE: ======
-            pass
+            model = self.feature_extractor(torch.zeros(1, *self.in_size))
+            return torch.prod(torch.tensor(model.size()))
             # ========================
         finally:
             torch.set_rng_state(rng_state)
@@ -106,7 +112,12 @@ class ConvClassifier(nn.Module):
         #  (FC -> ACT)*M -> Linear
         #  The last Linear layer should have an output dim of out_classes.
         # ====== YOUR CODE: ======
-
+        layers.append(nn.Flatten())
+        for i in range(len(self.hidden_dims)):
+            layers.append(nn.Linear(n_features, self.hidden_dims[i]))
+            layers.append(ACTIVATIONS[self.activation_type](**self.activation_params))
+            n_features = self.hidden_dims[i]
+        layers.append(nn.Linear(n_features, self.out_classes))
         # ========================
 
         seq = nn.Sequential(*layers)
@@ -117,7 +128,9 @@ class ConvClassifier(nn.Module):
         #  Extract features from the input, run the classifier on them and
         #  return class scores.
         # ====== YOUR CODE: ======
-        out = None
+        features = self.feature_extractor(x)
+        features = features.view(features.size(0), -1)
+        out = self.classifier(features)
         # ========================
         return out
 
@@ -177,7 +190,30 @@ class ResidualBlock(nn.Module):
         #  - Don't create layers which you don't use! This will prevent
         #    correct comparison in the test.
         # ====== YOUR CODE: ======
+        activation = ACTIVATIONS[activation_type](**activation_params)
+        padding = kernel_sizes[0] // 2
+        main_layers = [nn.Conv2d(in_channels=in_channels, out_channels=channels[0],
+                                 kernel_size=kernel_sizes[0], padding=padding, bias=True)]
+        shortcut_layers = []
+        for in_channel, out_channel, kernel_size in zip(channels[:-1], channels[1:], kernel_sizes[1:]):
 
+            if batchnorm:
+                main_layers.append(nn.BatchNorm2d(in_channel))
+            if dropout > 0:
+                main_layers.append(nn.Dropout2d(dropout))
+
+            main_layers.append(activation)
+            padding = kernel_size // 2
+            main_layers.append(nn.Conv2d(in_channels=in_channel, out_channels=out_channel,
+                                         kernel_size=kernel_size, padding=padding, bias=True))
+
+        if in_channels == channels[-1]:
+            shortcut_layers.append(nn.Identity())
+        else:
+            shortcut_layers.append(nn.Conv2d(in_channels, channels[-1], kernel_size=1, bias=False))
+
+        self.main_path = nn.Sequential(*main_layers)
+        self.shortcut_path = nn.Sequential(*shortcut_layers)
         # ========================
 
     def forward(self, x):
@@ -212,7 +248,9 @@ class ResidualBottleneckBlock(ResidualBlock):
         :param kwargs: Any additional arguments supported by ResidualBlock.
         """
         # ====== YOUR CODE: ======
-
+        new_channels = [inner_channels[0]] + inner_channels + [in_out_channels]
+        new_kernel_sizes = [1] + inner_kernel_sizes + [1]
+        super().__init__(in_channels=in_out_channels, channels=new_channels, kernel_sizes=new_kernel_sizes, **kwargs)
         # ========================
 
 
@@ -254,6 +292,21 @@ class ResNetClassifier(ConvClassifier):
         # ====== YOUR CODE: ======
         # Loop over groups of P output channels and create a block from them.
 
+        residual_blocks = self.pool_every * [3]
+        iterator = 0
+        cur_in_channels = in_channels
+        cur_channels = self.channels[:self.pool_every]
+        while iterator < len(self.channels):
+            if iterator > 0:
+                cur_in_channels = self.channels[iterator - 1]
+                cur_channels = self.channels[iterator:iterator + self.pool_every]
+            else:
+                cur_channels = self.channels[iterator:iterator + self.pool_every]
+
+            layers.append(ResidualBlock(in_channels=cur_in_channels, channels=cur_channels, kernel_sizes=[3, 3, 3],
+                                        activation_type='relu', activation_params={}, batchnorm=self.batchnorm,
+                                        dropout=self.dropout))
+            iterator += self.pool_every
         # ========================
         seq = nn.Sequential(*layers)
         return seq
@@ -268,7 +321,9 @@ class YourCodeNet(ConvClassifier):
 
         # TODO: Add any additional initialization as needed.
         # ====== YOUR CODE: ======
-        pass
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight)
         # ========================
 
     # TODO: Change whatever you want about the ConvClassifier to try to
@@ -276,5 +331,8 @@ class YourCodeNet(ConvClassifier):
     #  For example, add batchnorm, dropout, skip connections, change conv
     #  filter sizes etc.
     # ====== YOUR CODE: ======
+    def _make_feature_extractor(self):
+        in_channels, in_h, in_w, = tuple(self.in_size)
 
+        layers = []
     # ========================
