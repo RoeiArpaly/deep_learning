@@ -334,13 +334,14 @@ class YourCodeNet(ConvClassifier):
         """
         See ConvClassifier.__init__
         """
+        self.batchnorm = True
+        self.dropout = 0.15
+
         super().__init__(*args, **kwargs)
 
         # TODO: Add any additional initialization as needed.
         # ====== YOUR CODE: ======
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight)
+        pass
         # ========================
 
     # TODO: Change whatever you want about the ConvClassifier to try to
@@ -349,6 +350,9 @@ class YourCodeNet(ConvClassifier):
     #  filter sizes etc.
     # ====== YOUR CODE: ======
     def _make_feature_extractor(self):
+
+        self.pooling_params = {'kernel_size': 2}
+
         in_channels, in_h, in_w, = tuple(self.in_size)
         layers = []
         residuals_kernels = self.pool_every * [3]
@@ -382,4 +386,7 @@ class YourCodeNet(ConvClassifier):
                                         dropout=self.dropout,
                                         activation_type=self.activation_type,
                                         activation_params=self.activation_params))
+
+        seq = nn.Sequential(*layers)
+        return seq
     # ========================
