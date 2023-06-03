@@ -41,8 +41,8 @@ def run_experiment(
     hidden_dims=[1024],
     model_type="cnn",
     # You can add extra configuration for your experiments here
-    pooling_params=dict(kernel_size=2, stride=2),
-    conv_params=dict(kernel_size=3, stride=1, padding=1),
+    pooling_params=dict(kernel_size=2),
+    conv_params=dict(kernel_size=3, padding=1),
     dropout=0.15,
     batchnorm=True,
     **kw,

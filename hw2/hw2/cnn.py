@@ -350,6 +350,36 @@ class YourCodeNet(ConvClassifier):
     # ====== YOUR CODE: ======
     def _make_feature_extractor(self):
         in_channels, in_h, in_w, = tuple(self.in_size)
-
         layers = []
+        residuals_kernels = self.pool_every * [3]
+        iterator = 0
+        cur_in = in_channels
+        cur_channels = self.channels[:self.pool_every]
+        while iterator <= (len(self.channels) - self.pool_every):
+
+            layers.append(ResidualBlock(in_channels=cur_in,
+                                        channels=cur_channels,
+                                        kernel_sizes=residuals_kernels,
+                                        batchnorm=self.batchnorm,
+                                        dropout=self.dropout,
+                                        activation_type=self.activation_type,
+                                        activation_params=self.activation_params))
+
+            layers.append(POOLINGS[self.pooling_type](**self.pooling_params))
+
+            iterator = iterator + self.pool_every
+            cur_in = cur_channels[-1]
+            cur_channels = self.channels[iterator:iterator + self.pool_every]
+
+        if iterator < len(self.channels):
+            cur_channels = self.channels[iterator:]
+            residuals_kernels = len(cur_channels) * [3]
+
+            layers.append(ResidualBlock(in_channels=cur_in,
+                                        channels=cur_channels,
+                                        kernel_sizes=residuals_kernels,
+                                        batchnorm=self.batchnorm,
+                                        dropout=self.dropout,
+                                        activation_type=self.activation_type,
+                                        activation_params=self.activation_params))
     # ========================
