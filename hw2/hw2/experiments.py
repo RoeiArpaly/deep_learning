@@ -95,11 +95,16 @@ def run_experiment(
                             pool_every=pool_every, hidden_dims=hidden_dims,
                             pooling_params=pooling_params, conv_params=conv_params
                             )
-    else:
+    elif model_type == 'resnet':
         model_params = dict(in_size=in_size, out_classes=out_size, channels=channels,
                             pool_every=pool_every, hidden_dims=hidden_dims,
                             pooling_params=pooling_params, conv_params=conv_params,
                             batchnorm=batchnorm, dropout=dropout
+                            )
+    else:
+        model_params = dict(in_size=in_size, out_classes=out_size, channels=channels,
+                            pool_every=pool_every, hidden_dims=hidden_dims,
+                            pooling_params=pooling_params, conv_params=conv_params
                             )
 
     model = model_cls(**model_params)
