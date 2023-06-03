@@ -41,6 +41,10 @@ def run_experiment(
     hidden_dims=[1024],
     model_type="cnn",
     # You can add extra configuration for your experiments here
+    pooling_params=dict(kernel_size=2, stride=2),
+    conv_params=dict(kernel_size=3, stride=1, padding=1),
+    dropout=0.15,
+    batchnorm=True,
     **kw,
 ):
     """
@@ -78,9 +82,35 @@ def run_experiment(
     fit_res = None
     # ====== YOUR CODE: ======
     # Data - use DataLoader
-    
+    train_loader = DataLoader(ds_train, batch_size=bs_train, shuffle=True)
+    test_loader = DataLoader(ds_test, batch_size=bs_test, shuffle=False)
+
     # Create model, loss and optimizer instances
-    
+    in_size, out_size = ds_train[0][0].shape, 10
+
+    channels = [block_filter for block_filter in filters_per_layer for _ in range(layers_per_block)]
+
+    if model_type == 'cnn':
+        model_params = dict(in_size=in_size, out_classes=out_size, channels=channels,
+                            pool_every=pool_every, hidden_dims=hidden_dims,
+                            pooling_params=pooling_params, conv_params=conv_params
+                            )
+    else:
+        model_params = dict(in_size=in_size, out_classes=out_size, channels=channels,
+                            pool_every=pool_every, hidden_dims=hidden_dims,
+                            pooling_params=pooling_params, conv_params=conv_params,
+                            batchnorm=batchnorm, dropout=dropout
+                            )
+
+    model = model_cls(**model_params)
+
+    loss_fn = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
+
+    trainer = training.TorchTrainer(model=model, loss_fn=loss_fn, optimizer=optimizer, device=device)
+    fit_res = trainer.fit(early_stopping=early_stopping, checkpoints=checkpoints,
+                          dl_train=train_loader, dl_test=test_loader, num_epochs=epochs)
+
     # ========================
 
     save_experiment(run_name, out_dir, cfg, fit_res)

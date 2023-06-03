@@ -82,10 +82,19 @@ class Trainer(abc.ABC):
             # ====== YOUR CODE: ======
             epoch_train_loss, epoch_train_acc = self.train_epoch(dl_train, verbose=verbose, **kw)
             epoch_test_loss, epoch_test_acc = self.test_epoch(dl_test, verbose=verbose, **kw)
-            train_loss.append((sum(epoch_train_loss) / len(epoch_train_loss)).item())
+            train_loss.append((sum(epoch_train_loss) / len(epoch_train_loss)))
             train_acc.append(epoch_train_acc)
-            test_loss.append((sum(epoch_test_loss) / len(epoch_test_loss)).item())
+            test_loss.append((sum(epoch_test_loss) / len(epoch_test_loss)))
             test_acc.append(epoch_test_acc)
+
+            if early_stopping is not None:
+                if best_acc is None or epoch_test_acc > best_acc:
+                    best_acc = epoch_test_acc
+                    epochs_without_improvement = 0
+                else:
+                    epochs_without_improvement += 1
+                    if epochs_without_improvement >= early_stopping:
+                        break
             # ========================
 
         return FitResult(actual_num_epochs, train_loss, train_acc, test_loss, test_acc)

@@ -190,30 +190,30 @@ class ResidualBlock(nn.Module):
         #  - Don't create layers which you don't use! This will prevent
         #    correct comparison in the test.
         # ====== YOUR CODE: ======
-        activation = ACTIVATIONS[activation_type](**activation_params)
         padding = kernel_sizes[0] // 2
-        main_layers = [nn.Conv2d(in_channels=in_channels, out_channels=channels[0],
-                                 kernel_size=kernel_sizes[0], padding=padding, bias=True)]
-        shortcut_layers = []
+        activation = ACTIVATIONS[activation_type](**activation_params)
+
+        main_layers = [nn.Conv2d(in_channels=in_channels, out_channels=channels[0], kernel_size=kernel_sizes[0], padding=padding)]
+
         for in_channel, out_channel, kernel_size in zip(channels[:-1], channels[1:], kernel_sizes[1:]):
 
-            if batchnorm:
-                main_layers.append(nn.BatchNorm2d(in_channel))
             if dropout > 0:
                 main_layers.append(nn.Dropout2d(dropout))
+            if batchnorm:
+                main_layers.append(nn.BatchNorm2d(in_channel))
 
             main_layers.append(activation)
             padding = kernel_size // 2
-            main_layers.append(nn.Conv2d(in_channels=in_channel, out_channels=out_channel,
-                                         kernel_size=kernel_size, padding=padding, bias=True))
+
+            main_layers.append(nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=kernel_size, padding=padding))
 
         if in_channels == channels[-1]:
-            shortcut_layers.append(nn.Identity())
+            layers_shortcut = [nn.Identity()]
         else:
-            shortcut_layers.append(nn.Conv2d(in_channels, channels[-1], kernel_size=1, bias=False))
+            layers_shortcut = [nn.Conv2d(in_channels=in_channels, out_channels=channels[-1], bias=False, kernel_size=1)]
 
+        self.shortcut_path = nn.Sequential(*layers_shortcut)
         self.main_path = nn.Sequential(*main_layers)
-        self.shortcut_path = nn.Sequential(*shortcut_layers)
         # ========================
 
     def forward(self, x):
@@ -292,21 +292,38 @@ class ResNetClassifier(ConvClassifier):
         # ====== YOUR CODE: ======
         # Loop over groups of P output channels and create a block from them.
 
-        residual_blocks = self.pool_every * [3]
+        residuals_kernels = self.pool_every * [3]
         iterator = 0
-        cur_in_channels = in_channels
+        cur_in = in_channels
         cur_channels = self.channels[:self.pool_every]
-        while iterator < len(self.channels):
-            if iterator > 0:
-                cur_in_channels = self.channels[iterator - 1]
-                cur_channels = self.channels[iterator:iterator + self.pool_every]
-            else:
-                cur_channels = self.channels[iterator:iterator + self.pool_every]
+        while iterator <= (len(self.channels) - self.pool_every):
 
-            layers.append(ResidualBlock(in_channels=cur_in_channels, channels=cur_channels, kernel_sizes=[3, 3, 3],
-                                        activation_type='relu', activation_params={}, batchnorm=self.batchnorm,
-                                        dropout=self.dropout))
-            iterator += self.pool_every
+            layers.append(ResidualBlock(in_channels=cur_in,
+                                        channels=cur_channels,
+                                        kernel_sizes=residuals_kernels,
+                                        batchnorm=self.batchnorm,
+                                        dropout=self.dropout,
+                                        activation_type=self.activation_type,
+                                        activation_params=self.activation_params))
+
+            layers.append(POOLINGS[self.pooling_type](**self.pooling_params))
+
+            iterator = iterator + self.pool_every
+            cur_in = cur_channels[-1]
+            cur_channels = self.channels[iterator:iterator + self.pool_every]
+
+        if iterator < len(self.channels):
+            cur_channels = self.channels[iterator:]
+            residuals_kernels = len(cur_channels) * [3]
+
+            layers.append(ResidualBlock(in_channels=cur_in,
+                                        channels=cur_channels,
+                                        kernel_sizes=residuals_kernels,
+                                        batchnorm=self.batchnorm,
+                                        dropout=self.dropout,
+                                        activation_type=self.activation_type,
+                                        activation_params=self.activation_params))
+
         # ========================
         seq = nn.Sequential(*layers)
         return seq
