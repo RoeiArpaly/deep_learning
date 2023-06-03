@@ -107,7 +107,48 @@ This can indicate of a decline in the model's performance on unseen data.
 
 part3_q1 = r"""
 **Your answer:**
+1.
 
+Number of parameters after each convolution is:
+
+$K \cdot (C_in \cdot F^2 + 1) = (channels_out \cdot ((channels_in \cdot width \cdot height) + 1)$
+
+Example 1 - Regular  block
+    First Conv layer:
+   $  parameters = 256 \cdot ((256 \cdot 3 \cdot 3) + 1) = 590,080 $ <br>
+   Second Conv layer:
+       $ parameters = 256 \cdot ((256 \cdot 3 \cdot 3) + 1) = 590,080 $ <br>
+   Total parameters = $590,080 \cdot 2 = 1,180,160$
+
+Compared to a Bottleneck Block:<br>
+First Conv layer:
+   $ parameters = 64 \cdot ((256 \cdot 1 \cdot 1) + 1) = 16,448 $ <br>
+Second Conv layer:
+   $ parameters = 64 \cdot ((64 \cdot 3 \cdot 3) + 1) = 36,928 $ <br>
+Third Conv layer:
+   $ parameters = 256 \cdot ((64 \cdot 1 \cdot 1) + 1) = 16,640 $ <br>
+Total parameters = $ 16,448 + 36,928 + 16,640 = 70,016 $
+
+Hence, the number of parameters in a regular block is much larger than in a bottleneck block.<br><br>
+
+2.
+FLOPs (floating point operations) in a convolution layer and the ReLU activation function can be calculated as follows:
+To compute a convolution layer between input dimensions (C_in, H_in, W_in) and output dimensions (C_out, H_out, W_out), 
+we perform 2 * C_in * k^2 * C_out * W_out * H_out floating point operations.<br>
+The factor of 2 accounts for both the multiplication and addition operations involved in the convolution.<br>
+Additionally, the ReLU activation function in each layer requires H_out * W_out FLOPs.
+Comparing a regular block to a bottleneck block, we observe that the regular block involves significantly more FLOPs. 
+Consequently, the bottleneck block is much more computationally efficient.
+
+3.
+Spatially, the regular block consists of two convolution layers with a filter size of 3x3, 
+resulting in a receptive field of 5x5. In contrast, the bottleneck block comprises two convolution layers with a filter 
+size of 1x1 and one convolution layer with a filter size of 3x3, resulting in a receptive field of 3x3.<br>
+Therefore, the regular block combines the input in a more comprehensive manner in terms of spatial information.<br><br>
+
+Regarding the influence across the feature map, the bottleneck block projects the input to a smaller dimension in the first layer. 
+As a result, not all inputs have the same influence across the feature map. In contrast, the regular block does not perform such projection,
+allowing the input to have equal influence across the feature map.<br><br>
 """
 
 part3_q2 = r"""
