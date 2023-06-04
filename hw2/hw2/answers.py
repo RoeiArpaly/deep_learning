@@ -111,7 +111,7 @@ part3_q1 = r"""
 
 Number of parameters after each convolution is:
 
-$K \cdot (C_in \cdot F^2 + 1) = (channels_out \cdot ((channels_in \cdot width \cdot height) + 1)$
+$K \cdot (C_in \cdot F^2 + 1) = (ChannelsOut \cdot ((ChannelsIn \cdot width \cdot height) + 1)$
 
 Example 1 - Regular  block
     First Conv layer:
@@ -153,26 +153,64 @@ allowing the input to have equal influence across the feature map.<br><br>
 
 part3_q2 = r"""
 **Your answer:**
+1. The graph indicates that increasing the depth (L) does not necessarily lead to improvement for both values of K (at least as we can see from 10 epochs).
+When L=4, the best result is obtained, implying that increasing the depth does not contribute to enhancing the outcomes.
+On the other hand, for L=8 and L=16, the model becomes untrainable in K=64, which will be further explained in the following section.<br><br>
+
+2. it is true that for L=8 (in K=64), and L=16 (for both K's), the model becomes untrainable. <br>
+"vanishing gradient problem" might be the underlying cause for this issue. 
+This phenomenon occurs in deep networks when the gradient approaches zero, 
+resulting in the failure of gradient information to propagate back to the initial layers during the backpropagation process.<br><br>
+
+Here are two suggestions for the solution to this problem:
+1. Incorporating batch normalization can assist in maintaining the derivative within an appropriate range.
+2. Employing a residual block can help overcome this issue by allowing the network to skip layers.
 
 """
 
 part3_q3 = r"""
 **Your answer:**
-
+Observing the graphs, it becomes evident that increasing the value of K leads to improved outcomes but the models are more likely to overfit.
+Furthermore, when increasing L we had to change the hyperparameter to pool every 4 layers in order to handle the small images.<br>
+Due to the higher complexity of the model we achieved a slightly better result compared to the first experiment.
 """
 
 part3_q4 = r"""
 **Your answer:**
-
+Upon examining the graph, it is more likely that L=1 will yield the best result.
+The explanation for this phenomenon aligns with what we observed in the first experiment.
+Subsequent to L=1, there is a decline in performance, and when L=4 is employed, the model becomes overly complex due to the large amount of features. 
+Consequently, the model becomes untrainable, likely due to the reemergence of the vanishing gradient issue. 
+These outcomes are consistent with the results obtained from the previous experiments.
 """
 
 part3_q5 = r"""
 **Your answer:**
-
+We will begin by mentioning that we do not encounter the same problem as previous experiments.
+We attribute this to the implementation ResNet, which allows the network to skip layers.
+Consequently, we can leverage more complex and deeper networks, leading to improved performance compared to the previous experiments.<br>
+Furthermore, the results obtained in this experiment surpass those of previous iterations, likely due to the above reasons.<br>
+Based on the graph, it is easy to see that L=16 and L=4 are the optimal choices.
+These parameters strike a balance between model complexity and simplicity, resulting in optimal performance.
 """
 
 part3_q6 = r"""
 **Your answer:**
+1. In the implementation of YourCnn, we made the following decisions:
 
+    a. Incorporating dropout: This technique was employed to mitigate overfitting on the training set. 
+    By adjusting the value of dropout, we fine-tuned its impact to achieve an optimal performance.
+    
+    b. Applying batch normalization: This step was crucial in improving the speed and stability of the learning process.
+    
+    c. Utilizing a residual block: The inclusion of a residual block addressed issues encountered in previous experiments,
+    specifically the problem of an untrainable model.
+
+2. Compared to the first experiment (YourCnn), by observing the test loss we can see that the performance of the model can increase by adding more epochs,
+due to the regularization of the dropout parameter. 
+The best performance was achieved with L=6, attaining an accuracy of approximately ~77% with just 10 epochs.
+
+Based on our analysis, we believe that L=6 is the optimal parameter choice.
+This selection also strikes a balance between model complexity and simplicity as mentioned in the previous questions
 """
 # ==============
