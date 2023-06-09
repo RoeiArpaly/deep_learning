@@ -108,11 +108,14 @@ class LinearClassifier(object):
                 loss = loss_fn.loss(x_batch, y_batch, class_scores, y_pred)
                 average_loss += loss.item()
                 grad = loss_fn.grad()
-                self.weights -= learn_rate * (grad + self.weights * weight_decay)
+                self.weights -= learn_rate * (grad + weight_decay * self.weights)
                 total_correct += self.evaluate_accuracy(y_batch, y_pred)
 
-            train_res.loss.append(average_loss)
-            train_res.accuracy.append(total_correct)
+            train_res.loss.append(average_loss / len(dl_train))
+            train_res.accuracy.append(total_correct / len(dl_train))
+
+            average_loss = 0
+            total_correct = 0
 
             for x_batch, y_batch in dl_valid:
                 y_pred, class_scores = self.predict(x_batch)
@@ -120,8 +123,9 @@ class LinearClassifier(object):
                 average_loss += loss.item()
                 total_correct += self.evaluate_accuracy(y_batch, y_pred)
 
-            valid_res.loss.append(average_loss)
-            valid_res.accuracy.append(total_correct)
+            valid_res.loss.append(average_loss / len(dl_valid))
+            valid_res.accuracy.append(total_correct / len(dl_valid))
+
             # ========================
             print(".", end="")
 
@@ -156,7 +160,7 @@ def hyperparams():
     #  Manually tune the hyperparameters to get the training accuracy test
     #  to pass.
     # ====== YOUR CODE: ======
-    hp = {'weight_std': 0.001, 'learn_rate': 0.01, 'weight_decay': 0.001}
+    hp = {'weight_std': 0.001, 'learn_rate': 0.01, 'weight_decay': 0.002}
     # ========================
 
     return hp
