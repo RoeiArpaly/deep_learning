@@ -49,7 +49,6 @@ After performing cross-validation, the validation-set performance of each fold c
 Cross-validation provides a robust estimate of the model's performance by evaluating it on multiple subsets of the data.
 By averaging the performance across different folds, we obtain a more reliable indication of how well the model is likely to generalize to new, unseen data.
 
-.
 """
 
 part1_q2 = r"""
@@ -83,13 +82,11 @@ In this case, the model might become too specialized to the training set, captur
 <br> Therefore, finding the optimal value for k is crucial in striking a balance between bias and variance, 
 and it typically involves experimentation and validation to determine the most suitable number of neighbors for a given dataset and problem.
 
-
--
-
 """
 
 part2_q2 = r"""
 **Your answer:**
+
 Using k-fold cross-validation offers several advantages over the alternative approaches of training on the entire 
 train-set and selecting the best model based on either the train-set or test-set accuracy.
 
