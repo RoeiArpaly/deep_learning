@@ -10,7 +10,7 @@ math (delimited with $$).
 
 part1_q1 = r"""
 **Your answer:**
-The Jacobian matrix represents the partial derivatives of the output with respect to the input. 
+1) The Jacobian matrix represents the partial derivatives of the output with respect to the input. 
 In this case, the input tensor has a shape of $(128, 1024)$, indicating a batch size of $128$ and input dimension of $1024$.
 The output tensor has a shape of $(128, 2048)$ with 128 samples and an output dimension of $2048$.
 The Jacobian tensor is calculated by computing the partial derivatives for each instance separately,
@@ -18,9 +18,9 @@ resulting in a shape of $(128, 2048, 128, 1024)$.
 While intuitively it may seem more logical to have a shape of $(128, 2048, 1024)$ to keep derivatives between instances separate,
 in practice, the framework like PyTorch considers the Jacobian in the given shape.
 
-Each element in the Jacobian tensor is represented by a single-precision floating point, which occupies $4$ bytes ($32$ bits).
+2) Each element in the Jacobian tensor is represented by a single-precision floating point, which occupies $4$ bytes ($32$ bits).
 To calculate the memory required, we multiply the number of elements in the tensor by the size of each element and convert it to gigabytes.
-The total number of elements is given by $\(4 \cdot 128 \cdot 2048 \cdot 128 \cdot 1024\)$. Dividing this by $ 1024^3 $ converts the result to gigabytes:
+The total number of elements is given by $(4 \cdot 128 \cdot 2048 \cdot 128 \cdot 1024)$. Dividing this by $ 1024^3 $ converts the result to gigabytes:
 
 $$\begin{align}
 \frac{(4 \cdot 128\cdot 2048 \cdot 128 \cdot 1024)} {(1024^3)} = 128 \quad gigabytes
@@ -108,9 +108,9 @@ part2_q2 = r"""
 **Your answer:**
 Yes, it is possible for the test loss to increase for a few epochs while the test accuracy also increases when training a model with the cross-entropy loss function. The cross-entropy loss function is defined as:
 
-$\[-\sum_{i}y_i \log(\hat{y_i})\]$
+$[-\sum_{i}y_i \log(\hat{y_i})]$
 
-where $\(y_i\)$ represents the true label and $\(\hat{y_i}\)$ represents the predicted probability distribution for each class.
+where $(y_i)$ represents the true label and $(\hat{y_i})$ represents the predicted probability distribution for each class.
 
 Unlike accuracy, which only considers whether the maximum probability label matches the correct label, 
 the cross-entropy loss takes into account the confidence or certainty of the classifier's predictions.
@@ -132,8 +132,7 @@ To address this issue, regularization techniques or model adjustments can be app
 
 part3_q1 = r"""
 Your answer:
-1)
-Number of parameters after each convolution is:
+1) Number of parameters after each convolution is:
 $K \cdot (C_in \cdot F^2 + 1) = (ChannelsOut \cdot ((ChannelsIn \cdot width \cdot height) + 1)$
 Example 1 - Regular  block
     First Conv layer:
@@ -151,8 +150,7 @@ Third Conv layer:
 Total parameters = $ 16,448 + 36,928 + 16,640 = 70,016 $
 Hence, the number of parameters in a regular block is much larger than in a bottleneck block.
 <br><br>
-2)
-The number of parameters in a convolutional layer can be calculated using the formula: $2HW\times(C_{in} k_w k_h +1)C_{out}$, 
+2) The number of parameters in a convolutional layer can be calculated using the formula: $2HW\times(C_{in} k_w k_h +1)C_{out}$, 
 where $H$ is the input height, $W$ is the input width, $C_{in}$ is the number of input channels, $k_w$ is the kernel width, $k_h$ is the kernel height, 
 and $C_{out}$ is the number of output channels. The number of FLOPs (floating-point operations) in a convolutional layer is equal to the number of parameters multiplied by $2HW$.
 For the regular ResBlock, which performs two 3x3 convolutions directly on the 256-channel input, the total number of FLOPs is $2HW\times73,856$. 
@@ -164,14 +162,14 @@ and then performing two 3x3 convolutions on the reduced channels. This approach 
 In summary, the regular ResBlock has more parameters and performs approximately $2HW\times3000$ more FLOPs compared to the bottleneck ResBlock, 
 which uses a 1x1 convolution to reduce the number of channels before applying the 3x3 convolutions.
 <br><br>
-3)
-|. Spatial combination within feature maps: The regular ResBlock demonstrates a higher capacity to combine input within feature maps. 
+3) 
+    a. Spatial combination within feature maps: The regular ResBlock demonstrates a higher capacity to combine input within feature maps. 
 In the regular ResBlock, each output feature within a single layer depends on nine input features, 
 resulting in a total dependency of at least 25 input features for one output feature (assuming a stride of 1). 
 Conversely, the bottleneck ResBlock relies on only one input feature for the first and last layers, and nine input features for the second layer, 
 resulting in a total dependency of nine input features for one output feature.
 
-||. Combination across feature maps: The bottleneck ResBlock, due to its specific structure, facilitates the creation of a compact representation of the feature map. 
+    b. Combination across feature maps: The bottleneck ResBlock, due to its specific structure, facilitates the creation of a compact representation of the feature map. 
 By projecting the input feature map to a smaller channel size and then back to the original size, it enables efficient combination across feature maps. 
 In contrast, regular ResBlocks do not assume any particular structure and function as conventional convolutional layers when it comes to feature map projections.
 
@@ -193,9 +191,9 @@ This issue is often associated with the "vanishing gradient problem" where the g
 hindering the flow of gradient information to earlier layers of the network. As a result, the network fails to learn effectively and convergence becomes difficult.
 
 To address this problem, two potential solutions can be considered:
-1. Incorporating batch normalization can help alleviate the vanishing gradient problem by normalizing the activations within each mini-batch. 
+    a. Incorporating batch normalization can help alleviate the vanishing gradient problem by normalizing the activations within each mini-batch. 
 This normalization process helps in maintaining the derivative within an appropriate range, facilitating the gradient flow and improving training stability.
-2. Another approach to mitigate the vanishing gradient problem is to employ residual blocks.
+    b. Another approach to mitigate the vanishing gradient problem is to employ residual blocks.
 Residual connections allow the network to bypass certain layers and directly propagate the input to subsequent layers. 
 This mechanism enables the network to effectively learn residual information and gradients, ensuring better information flow through the network and mitigating the vanishing gradient problem.
 
