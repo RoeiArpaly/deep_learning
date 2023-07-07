@@ -23,7 +23,11 @@ def char_maps(text: str):
     #  It's best if you also sort the chars before assigning indices, so that
     #  they're in lexical order.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    char_to_idx, idx_to_char = {}, {}
+    chars = sorted(set(text))
+    for i, char in enumerate(chars):
+        char_to_idx[char] = i
+        idx_to_char[i] = char
     # ========================
     return char_to_idx, idx_to_char
 
@@ -39,7 +43,9 @@ def remove_chars(text: str, chars_to_remove):
     """
     # TODO: Implement according to the docstring.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    all_chars = ''.join(chars_to_remove)
+    text_clean = re.sub(f'[{all_chars}]', '', text)
+    n_removed = len(text) - len(text_clean)
     # ========================
     return text_clean, n_removed
 
@@ -59,7 +65,9 @@ def chars_to_onehot(text: str, char_to_idx: dict) -> Tensor:
     """
     # TODO: Implement the embedding.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    result = torch.zeros(len(text), len(char_to_idx), dtype=torch.int8)
+    for i, char in enumerate(text):
+        result[i][char_to_idx[char]] = 1
     # ========================
     return result
 
@@ -76,7 +84,9 @@ def onehot_to_chars(embedded_text: Tensor, idx_to_char: dict) -> str:
     """
     # TODO: Implement the reverse-embedding.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    result = ""
+    for row in embedded_text:
+        result += idx_to_char[row.argmax().item()]
     # ========================
     return result
 
@@ -105,7 +115,10 @@ def chars_to_labelled_samples(text: str, char_to_idx: dict, seq_len: int, device
     #  3. Create the labels tensor in a similar way and convert to indices.
     #  Note that no explicit loops are required to implement this function.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    N = len(text) % seq_len
+    embedded_text = chars_to_onehot(text, char_to_idx)  # matrix of one-hot vectors
+    samples = torch.stack(torch.split(embedded_text[:-N, :], seq_len)).to(device)
+    labels = torch.stack(torch.split(embedded_text[1:-N+1, :].argmax(dim=1), seq_len)).to(device)
     # ========================
     return samples, labels
 
