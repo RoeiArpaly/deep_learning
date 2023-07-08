@@ -94,8 +94,24 @@ class Trainer(abc.ABC):
             #    simple regularization technique that is highly recommended.
             # ====== YOUR CODE: ======
             
-            raise NotImplementedError()
+            epoch_train_loss, epoch_train_acc = self.train_epoch(dl_train, verbose=verbose, **kw)
+            epoch_test_loss, epoch_test_acc = self.test_epoch(dl_test, verbose=verbose, **kw)
+            train_loss.append((sum(epoch_train_loss) / len(epoch_train_loss)))
+            train_acc.append(epoch_train_acc)
+            test_loss.append((sum(epoch_test_loss) / len(epoch_test_loss)))
+            test_acc.append(epoch_test_acc)
 
+            if early_stopping is not None:
+                if best_acc is None or epoch_test_acc > best_acc:
+                    best_acc = epoch_test_acc
+                    epochs_without_improvement = 0
+                else:
+                    epochs_without_improvement += 1
+                    if epochs_without_improvement >= early_stopping:
+                        break
+
+            train_result = EpochResult(epoch_train_loss, epoch_train_acc)
+            test_result = EpochResult(epoch_test_loss, epoch_test_acc)
             # ========================
 
             # Save model checkpoint if requested
@@ -230,7 +246,7 @@ class RNNTrainer(Trainer):
     def test_epoch(self, dl_test: DataLoader, **kw):
         # TODO: Implement modifications to the base method, if needed.
         # ====== YOUR CODE: ======
-        self.hidden_state = None   
+        self.hidden_state = None
         # ========================
         return super().test_epoch(dl_test, **kw)
 
@@ -287,7 +303,19 @@ class RNNTrainer(Trainer):
             #  - Loss calculation
             #  - Calculate number of correct predictions
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+
+            # Forward pass
+            y_pred, hidden_state = self.model(x, self.hidden_state)
+
+            loss = 0
+            for i in range(seq_len):
+                loss += self.loss_fn(y_pred[:, i, :], y[:, i])
+
+            # Calculate number of correct char predictions
+            num_correct = torch.sum(y_pred.argmax(dim=2) == y)
+
+            # update hidden state
+            self.hidden_state = hidden_state.detach()
             # ========================
 
         return BatchResult(loss.item(), num_correct.item() / seq_len)
