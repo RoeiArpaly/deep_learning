@@ -334,7 +334,7 @@ class VAETrainer(Trainer):
 
         # backward pass
         self.optimizer.zero_grad()
-        loss, data_loss, kl_loss = self.loss_fn(decoded, x, mu, log_var)
+        loss, data_loss, kl_loss = self.loss_fn(x, decoded, mu, log_var)
         loss.backward()
 
         # update weights
@@ -356,7 +356,7 @@ class VAETrainer(Trainer):
             decoded, mu, log_var = self.model(x)
 
             # calculate loss
-            loss, data_loss, kl_loss = self.loss_fn(decoded, x, mu, log_var)
+            loss, data_loss, kl_loss = self.loss_fn(x, decoded, mu, log_var)
 
             # ========================
 
