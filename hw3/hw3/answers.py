@@ -39,7 +39,8 @@ def part1_generation_params():
     temperature = 0.0001
     # TODO: Tweak the parameters to generate a literary masterpiece.
     # ====== YOUR CODE: ======
-    
+    start_seq = "ACT I. SCENE I."
+    temperature = 0.5
     # ========================
     return start_seq, temperature
 
@@ -47,21 +48,53 @@ def part1_generation_params():
 part1_q1 = r"""
 **Your answer:**
 
+The main reason that we split the corpus into sequences instead of training on the whole text is that the corpus might be very large,
+hence including all the data in the RNN will not fit in memory.
+Additionally, training on the whole corpus will cause the RNN to be very deep,
+which might cause vanishing gradients and will make the model un-trainable.
+Furthermore, splitting the corpus into sequences will help the model to generalize better and prevent over fitting,
+because each train iteration will be unique,
+and the words in the same sequence will have a strong relation to each other since they are from the same context in the corpus.
+Therefore, the RNN will be able to learn patterns and dependencies in smaller sequences instead of the whole text. 
+
 """
 
 part1_q2 = r"""
 **Your answer:**
+
+The hidden state in an RNN can capture and retain information from earlier timesteps,
+allowing the generated text to show memory longer than the sequence length.
+This is due to the recurrent connections in the network that enable it to maintain in memory the contextual representation of past inputs.
 
 """
 
 part1_q3 = r"""
 **Your answer:**
 
+The order of batches is not shuffled during training of RNNs, due to the fact that the hidden state in an RNN is updated sequentially,
+building upon the information from previous timesteps.
+Shuffling the order of batches would disrupt the continuity of the hidden state's evolution,
+leading to a loss of sequential information and potentially harm the RNN's ability to capture the dependencies in the data.
+By maintaining the order of batches,
+the RNN can preserve the sequential nature of the hidden state updates and effectively learn from the patterns of the input sequences.
+
 """
 
 part1_q4 = r"""
 **Your answer:**
 
+1) We lower the temperature for sampling because we want to reduce the randomness of the sampling.
+lower temperature means that the model will be more confident in its predictions, and will be less random.
+it also means it will be more deterministic, and will be more likely to repeat itself, which can be easier to reproduce.
+
+2) When the temperature is very high, the model will be very random, and will be less likely to repeat itself.
+The next character will be chosen almost uniformly from the possible characters.
+When we increase T,
+then $e^{y/T}\rightarrow 1$ and the $\text{hot_softmax}_T(y) = \frac{e^{y/T}}{\sum_k e^{y_k/T}}$ distribution will become more uniform.
+
+3) When the temperature is very low, the model will be very deterministic, and will be more likely to repeat itself.
+The next character will be chosen almost deterministically from the possible characters, sampling will be almost like taking the Argmax.
+When we decrease T, ${1/T}$ become very large, which will increase the $\text{hot_softmax}_T(y) = \frac{e^{y/T}}{\sum_k e^{y_k/T}}$. 
 
 """
 # ==============
@@ -79,7 +112,14 @@ def part2_vae_hyperparams():
     )
     # TODO: Tweak the hyperparameters to generate a former president.
     # ====== YOUR CODE: ======
-   
+
+    hypers['batch_size'] = 16
+    hypers['h_dim'] = 64
+    hypers['z_dim'] = 32
+    hypers['x_sigma2'] = 0.001
+    hypers['learn_rate'] = 0.0002
+    hypers['betas'] = (0.9, 0.999)
+
     # ========================
     return hypers
 
