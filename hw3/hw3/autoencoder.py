@@ -19,7 +19,15 @@ class EncoderCNN(nn.Module):
         #  use pooling or only strides, use any activation functions,
         #  use BN or Dropout, etc.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+
+        channels = [in_channels, 32, 64, 128, out_channels]
+        kernel_size = 3
+        for in_c, out_c in zip(channels[:-1], channels[1:]):
+            modules.append(nn.Conv2d(in_c, out_c, kernel_size=kernel_size, bias=False))
+            modules.append(nn.BatchNorm2d(out_c))
+            modules.append(nn.ReLU())
+            modules.append(nn.Dropout2d(0.2))
+
         # ========================
         self.cnn = nn.Sequential(*modules)
 
@@ -42,7 +50,15 @@ class DecoderCNN(nn.Module):
         #  output should be a batch of images, with same dimensions as the
         #  inputs to the Encoder were.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+
+        channels = [in_channels, 128, 64, 32, out_channels]
+        kernel_size = 3
+        for in_c, out_c in zip(channels[:-1], channels[1:]):
+            modules.append(nn.ConvTranspose2d(in_c, out_c, kernel_size=kernel_size, bias=False))
+            modules.append(nn.BatchNorm2d(out_c))
+            modules.append(nn.ReLU())
+            modules.append(nn.Dropout2d(0.2))
+
         # ========================
         self.cnn = nn.Sequential(*modules)
 
@@ -70,7 +86,11 @@ class VAE(nn.Module):
 
         # TODO: Add more layers as needed for encode() and decode().
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+
+        self.fc_mu = nn.Linear(n_features, z_dim)
+        self.fc_log_sigma2 = nn.Linear(n_features, z_dim)
+        self.fc_z = nn.Linear(z_dim, n_features)
+
         # ========================
 
     def _check_features(self, in_size):
@@ -91,7 +111,14 @@ class VAE(nn.Module):
         #     log_sigma2 (mean and log variance) of q(Z|x).
         #  2. Apply the reparametrization trick to obtain z.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+
+        h = self.features_encoder(x)
+        h = h.view(h.shape[0], -1)
+        mu = self.fc_mu(h)
+        log_sigma2 = self.fc_log_sigma2(h)
+        sigma2 = torch.exp(log_sigma2)
+        z = mu + torch.randn_like(sigma2) * torch.sqrt(sigma2)
+
         # ========================
 
         return z, mu, log_sigma2
@@ -102,7 +129,11 @@ class VAE(nn.Module):
         #  1. Convert latent z to features h with a linear layer.
         #  2. Apply features decoder.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+
+        x_rec = self.fc_z(z)
+        x_rec = x_rec.view(x_rec.shape[0], *self.features_shape)
+        x_rec = self.features_decoder(x_rec)
+
         # ========================
 
         # Scale to [-1, 1] (same dynamic range as original images).
@@ -121,7 +152,10 @@ class VAE(nn.Module):
             #    Instead of sampling from N(psi(z), sigma2 I), we'll just take
             #    the mean, i.e. psi(z).
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+
+            z = torch.randn(n, self.z_dim, device=device)
+            samples = self.decode(z)
+
             # ========================
 
         # Detach and move to CPU for display purposes
@@ -154,7 +188,24 @@ def vae_loss(x, xr, z_mu, z_log_sigma2, x_sigma2):
     #  1. The covariance matrix of the posterior is diagonal.
     #  2. You need to average over the batch dimension.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+
+    x_dim = x.shape[1] * x.shape[2] * x.shape[3]
+
+    data_loss = (x - xr).view(x.shape[0], -1)
+    data_loss = data_loss.norm(dim=1).square()
+    data_loss = data_loss.mean() / (x_sigma2 * x_dim)
+
+    trace = z_log_sigma2.exp().sum(dim=1)
+    mu_norm = z_mu.norm(dim=1) ** 2
+    log_det = -z_log_sigma2.sum(dim=1)
+
+    kldiv_losses_vector = trace + mu_norm + log_det
+
+    d_z = z_mu.shape[1]
+    kldiv_loss = kldiv_losses_vector.mean() - d_z
+
+    loss = data_loss + kldiv_loss
+
     # ========================
 
     return loss, data_loss, kldiv_loss
