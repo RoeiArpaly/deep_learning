@@ -93,7 +93,7 @@ class Trainer(abc.ABC):
             #  - Implement early stopping. This is a very useful and
             #    simple regularization technique that is highly recommended.
             # ====== YOUR CODE: ======
-            
+
             epoch_train_loss, epoch_train_acc = self.train_epoch(dl_train, verbose=verbose, **kw)
             epoch_test_loss, epoch_test_acc = self.test_epoch(dl_test, verbose=verbose, **kw)
             train_loss.append((sum(epoch_train_loss) / len(epoch_train_loss)))
@@ -112,6 +112,8 @@ class Trainer(abc.ABC):
 
             train_result = EpochResult(epoch_train_loss, epoch_train_acc)
             test_result = EpochResult(epoch_test_loss, epoch_test_acc)
+
+            save_checkpoint = True
             # ========================
 
             # Save model checkpoint if requested
@@ -327,7 +329,17 @@ class VAETrainer(Trainer):
         x = x.to(self.device)  # Image batch (N,C,H,W)
         # TODO: Train a VAE on one batch.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+
+        decoded, mu, log_var = self.model(x)
+
+        # backward pass
+        self.optimizer.zero_grad()
+        loss, data_loss, kl_loss = self.loss_fn(decoded, x, mu, log_var)
+        loss.backward()
+
+        # update weights
+        self.optimizer.step()
+
         # ========================
 
         return BatchResult(loss.item(), 1 / data_loss.item())
@@ -339,7 +351,13 @@ class VAETrainer(Trainer):
         with torch.no_grad():
             # TODO: Evaluate a VAE on one batch.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()    
+
+            # forward pass
+            decoded, mu, log_var = self.model(x)
+
+            # calculate loss
+            loss, data_loss, kl_loss = self.loss_fn(decoded, x, mu, log_var)
+
             # ========================
 
         return BatchResult(loss.item(), 1 / data_loss.item())
