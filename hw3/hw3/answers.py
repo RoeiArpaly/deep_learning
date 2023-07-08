@@ -127,25 +127,51 @@ def part2_vae_hyperparams():
 part2_q1 = r"""
 **Your answer:**
 
+$\sigma^2$ is the hyperparameter that control the variance of the likelihood distribution.
+Low values of sigma will cause the likelihood distribution to be narrow, hence produce more diverse images with larger variety (in our case, different images of Bosh).
+High values of sigma will cause the likelihood distribution to be wide, hence produce less diverse images with smaller variety,
+which will be similar to the dataset.
+Furthermore, $\sigma^2$ control the weight given to the reconstruction against the KL divergence.
 
 """
 
 part2_q2 = r"""
 **Your answer:**
 
+1. The reconstruction term in the VAE loss measures the difference between the original input and its reconstruction.
+By minimizing this term, the autoencoder learns to reconstruct the input.
+The KL divergence term in the VAE loss is the KL divergence between the latent space distribution and the prior distribution.
+The purpose of the KL divergence loss is used to control the diversity of the 
+outputs that produce by the model by comparing latent output to desired distribution.
+
+2. The KL loss term encourages the latent space distribution to be similar to the prior distribution,
+and it serves as regularization term to affect the decoder output.
+It controls how diverse are the samples from the latent space and how much they are close to normal distribution.
+
+3. The benefit of this effect is that it simplify the model, hence allows it to generalise better (avoiding overfitting).
+Therefore, reaching to better result in mapping an output point to its latent space coordinates.
 
 """
 
 part2_q3 = r"""
 **Your answer:**
 
-
+Our mission is to create an output that is similar to the input after reconstruction.
+Maximizing the evidence distribution $p(\bb{X})$, is equivalent to maximizing the log likelihood of the data.
+We start by maximizing the log likelihood of the data because we want to maximize the probability of the data given the model.
+This is equivalent to minimizing the negative log likelihood of the data given the model.
+Therefore, by maximizing the evidence distribution we can get an output distribution that is similar to the input image distribution (from the dataset).
 
 """
 
 part2_q4 = r"""
 **Your answer:**
 
+We model the log of the latent-space variance instead of directly modelling the variance,
+because we want to ensure that the training process is numerically stable.
+The log function is a monotonic function, which means that it preserves the order of the values, but decreases the magnitude of the values.
+Additionally, the log function expands small values, which well help to reduce vanishing gradients.
+The log function is also differentiable, which is important for the backpropagation algorithm.
 
 """
 
