@@ -424,6 +424,8 @@ class FineTuningTrainer(Trainer):
 
         predictions = torch.argmax(torch.sigmoid(logits), dim=1)
         num_correct = (predictions == labels).sum().detach()
+
+        loss, num_correct = loss.item(), num_correct.item()
         # ========================
         
         return BatchResult(loss, num_correct)
@@ -432,7 +434,7 @@ class FineTuningTrainer(Trainer):
         
         input_ids = batch["input_ids"].to(self.device)
         attention_masks = batch["attention_mask"]
-        labels= batch["label"]
+        labels = batch["label"]
         
         with torch.no_grad():
             # TODO:
@@ -442,5 +444,7 @@ class FineTuningTrainer(Trainer):
             loss, logits = outputs[:2]
             predictions = torch.argmax(torch.sigmoid(logits), dim=1)
             num_correct = (predictions == labels).sum().detach()
+
+            loss, num_correct = loss.item(), num_correct.item()
             # ========================
         return BatchResult(loss, num_correct)
