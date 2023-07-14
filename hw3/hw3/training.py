@@ -414,9 +414,16 @@ class FineTuningTrainer(Trainer):
         # TODO:
         #  fill out the training loop.
         # ====== YOUR CODE: ======
+        self.optimizer.zero_grad()
 
-        raise NotImplementedError()
-        
+        # HuggingFace distil-bert model
+        outputs = self.model(input_ids, attention_mask=attention_masks, labels=labels)
+        loss, logits = outputs[:2]
+        loss.backward()
+        self.optimizer.step()
+
+        predictions = torch.argmax(torch.sigmoid(logits), dim=1)
+        num_correct = (predictions == labels).sum().detach()
         # ========================
         
         return BatchResult(loss, num_correct)
@@ -431,6 +438,9 @@ class FineTuningTrainer(Trainer):
             # TODO:
             #  fill out the training loop.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            outputs = self.model(input_ids, attention_mask=attention_masks, labels=labels)
+            loss, logits = outputs[:2]
+            predictions = torch.argmax(torch.sigmoid(logits), dim=1)
+            num_correct = (predictions == labels).sum().detach()
             # ========================
         return BatchResult(loss, num_correct)
