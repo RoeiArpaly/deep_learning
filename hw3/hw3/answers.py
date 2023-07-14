@@ -205,11 +205,47 @@ def part3_transformer_encoder_hyperparams():
 
 part3_q1 = r"""
 **Your answer:**
+Fine-tuning outperforms training from scratch due to several reasons. 
+First, the fine-tuned model is larger and more expressive compared to the model built from scratch, which enables it to capture more intricate patterns in the data. 
+Additionally, during the pre-training phase, the fine-tuned model was trained on extensive datasets, providing it with a broader understanding of language.
+
+Moreover, the pre-training phase involved tasks that are similar to the downstream task, making the knowledge gained during pre-training directly applicable and relevant. 
+This relevance of context contributes to superior results when training only the classifiers on the downstream task. 
+This phenomenon holds true not only in natural language processing but also in vision models, where contrastive learning has shown better performance than training from scratch.
+
+However, it's important to note that if the downstream task is unique or substantially different in nature, 
+or if the domain differs significantly (such as using BERT for non-NLP time series classification), the results may vary. 
+In such cases, training from scratch might prove to be more effective.
 
 """
 
 part3_q2 = r"""
 **Your answer:**
+Fine-tuning the internal layers of a model, such as the multi-headed attention blocks, instead of the last two linear layers,
+can have different implications on the performance of the model for a specific task.
+
+1. Improved Performance: Fine-tuning internal layers can potentially improve the performance of the model. 
+The multi-headed attention blocks are responsible for capturing contextual relationships and dependencies within the input data. 
+By fine-tuning these layers, the model can adapt its attention patterns specifically to the task at hand, 
+potentially improving its ability to understand and represent relevant information.
+
+2. Degraded Performance: On the other hand, fine-tuning internal layers other than the last two linear layers may negatively impact the performance of the model. 
+The last two linear layers are typically responsible for mapping the distilled representation learned by the internal layers to the specific task labels or outputs. 
+By not fine-tuning these layers, the model might struggle to effectively utilize the learned representations to make accurate predictions.
+
+3. Task Dependency: The impact of fine-tuning internal layers can also depend on the specific task being performed. 
+Some tasks may benefit more from adapting the internal layers, while others may rely more on the final linear layers for performance. 
+It is difficult to make a general statement about all possible tasks, as the effectiveness of fine-tuning internal layers would vary based on the specific requirements and characteristics of the task.
+
+In summary, fine-tuning internal layers other than the last two linear layers can have varied outcomes depending on the specific task and data at hand. 
+It may lead to improved performance by allowing the model to adapt its attention patterns, 
+or it could result in degraded performance by neglecting the mapping of distilled representations to the task labels. 
+The ultimate effectiveness of fine-tuning internal layers should be determined empirically through experimentation and validation on the target task.
+
+However, in the case of the IMDB review dataset, fine-tuning the internal layers of the transformer encoder instead of the last two linear layers will potentially harm
+the performance because this task is to classify movie reviews as positive or negative (binary classification) and fine tuning the final linear layers will help the model to
+learn the mapping between the distilled representation to the task labels. 
+Additionally by only fine tuning the internal layers the model will not effectively utilize the learned representations to make accurate predictions.
 
 
 """
