@@ -197,7 +197,7 @@ def vae_loss(x, xr, z_mu, z_log_sigma2, x_sigma2):
     data_loss = data_loss.mean() / (x_sigma2 * x_dim)
 
     trace = z_log_sigma2.exp().sum(dim=1)
-    mu_norm = z_mu.norm(dim=1).square()
+    mu_norm = z_mu.norm(dim=1) ** 2
     log_det = -z_log_sigma2.sum(dim=1)
 
     kldiv_losses_vector = trace + mu_norm + log_det
