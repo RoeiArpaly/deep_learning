@@ -205,17 +205,17 @@ def part3_transformer_encoder_hyperparams():
 
 part3_q1 = r"""
 **Your answer:**
-Fine-tuning outperforms training from scratch due to several reasons. 
-First, the fine-tuned model is larger and more expressive compared to the model built from scratch, which enables it to capture more intricate patterns in the data. 
-Additionally, during the pre-training phase, the fine-tuned model was trained on extensive datasets, providing it with a broader understanding of language.
+Based on our experimentation with the fine tuning methods, "Unfreezing all layers" (method 2) outperforms The "Unfreeze The Final 2 Linear Layers" (method 1) due to several reasons.
+Firstly, by unfreezing all layers, we allowed the model to fine-tune the entire network, including the lower layers responsible for capturing general features and patterns. 
+Unfreezing all layers allows the model to adapt and learn from the specific nuances and patterns the may be related to the movie reviews and their sentiment (IMDB dataset).
+Secondly, unfreezing all layers provides the model with more parameters to update during fine-tuning. 
+The additional flexibility allows the model to better fit the training data, potentially capturing more intricate details and improving overall performance. 
 
-Moreover, the pre-training phase involved tasks that are similar to the downstream task, making the knowledge gained during pre-training directly applicable and relevant. 
-This relevance of context contributes to superior results when training only the classifiers on the downstream task. 
-This phenomenon holds true not only in natural language processing but also in vision models, where contrastive learning has shown better performance than training from scratch.
+Lastly, the size of the fine-tuning dataset might have influenced the performance.
+With only 25k training datapoints and 480 testing datapoints, the model's ability to generalize might be limited.
+By unfreezing all layers, the model has more capacity to capture and memorize the training examples, potentially leading to higher accuracy on the limited testing dataset.
 
-However, it's important to note that if the downstream task is unique or substantially different in nature, 
-or if the domain differs significantly (such as using BERT for non-NLP time series classification), the results may vary. 
-In such cases, training from scratch might prove to be more effective.
+It is also worth mentioning that method 2 (unfreezing all layers) took a significantly longer time to train than "Fine-tuning".
 
 """
 
